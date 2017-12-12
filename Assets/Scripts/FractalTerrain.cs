@@ -8,7 +8,8 @@ public class FractalTerrain
     private const float INITIAL_DITHER_RANGE = 20f;
     private const float DITHER_DECLINE_RANGE = 0.5f;
     private const int MAX_FRACTAL_TIMES = 10;
-    private const float MAX_CLIFF_HEIGHT = 0.2f;
+
+    private const int TEX_MAP_SIZE = 1024;
 
     private float length;
     private float width;
@@ -32,6 +33,18 @@ public class FractalTerrain
     public List<Vector3> NormalList
     {
         get { return normalList; }
+    }
+
+    private List<Vector2> uvList = new List<Vector2>();
+    public List<Vector2> UVList
+    {
+        get { return uvList; }
+    }
+
+    private Texture2D terrainMap;
+    public Texture2D TerrainMap
+    {
+        get { return terrainMap; }
     }
 
     public void Init(float length, float width, int seed, int fractalMaxTimes = MAX_FRACTAL_TIMES)
@@ -71,6 +84,7 @@ public class FractalTerrain
 //        Filter();
         Trianglize();
         SetNormals();
+        SetTerrainMap();
     }
 
     private void FractalNonRecursive(Pos bottomLeft, Pos bottomRight, Pos topRight, Pos topLeft, float ditherRange, int fractalTimes)
@@ -80,11 +94,6 @@ public class FractalTerrain
         squareList.Add(bottomRight);
         squareList.Add(topRight);
         squareList.Add(topLeft);
-
-        for(int j = 0; j < squareList.Count; ++j)
-        {
-            Debug.Log(squareList[j]);
-        }
 
         var dt = DateTime.Now;
         while(fractalTimes <= fractalMaxTimes)
@@ -167,48 +176,39 @@ public class FractalTerrain
 
         //Diamond Phase
         Pos left = (bl + tl) / 2;
-//        Debug.LogError("left:" + left);
         float leftHeight = (blHeight + tlHeight ) / 2f + RandomOffset(ditherRange);
         heightMap[left.Col, left.Row] = leftHeight;
 
         Pos bottom = (bl + br) / 2;
-//        Debug.LogError("bottom:" + bottom);
         float bottomHeight = (blHeight + brHeight) / 2f + RandomOffset(ditherRange);
         heightMap[bottom.Col, bottom.Row] = bottomHeight;
 
         Pos right = (tr + br) / 2;
-//        Debug.LogError("right:" + right);
         float rightHeight = (trHeight + brHeight) / 2f + RandomOffset(ditherRange);
         heightMap[right.Col, right.Row] = rightHeight;
 
         Pos top = (tr + tl) / 2;
-//        Debug.LogError("top:" + top);
         float topHeight = (trHeight + tlHeight) / 2f + RandomOffset(ditherRange);
         heightMap[top.Col, top.Row] = topHeight;
 
         //Square Phase
         Pos blCenter = (bl + center) / 2;
-//        Debug.LogError("blCenter:" + blCenter);
         float blCenterHeight = (blHeight + centerHeight) / 2f + RandomOffset(ditherRange);
         heightMap[blCenter.Col, blCenter.Row] = blCenterHeight;
             
         Pos brCenter = (br + center) / 2;
-//        Debug.LogError("brCenter:" + brCenter);
         float brCenterHeight = (brHeight + centerHeight) / 2f + RandomOffset(ditherRange);
         heightMap[brCenter.Col, brCenter.Row] = brCenterHeight;
 
         Pos trCenter = (tr + center) / 2;
-//        Debug.LogError("trCenter:" + trCenter);
         float trCenterHeight = (trHeight + centerHeight) / 2f + RandomOffset(ditherRange);
         heightMap[trCenter.Col, trCenter.Row] = trCenterHeight;
 
         Pos tlCenter = (tl + center) / 2;
-//        Debug.LogError("tlCenter:" + tlCenter);
         float tlCenterHeight = (tlHeight + centerHeight) / 2f + RandomOffset(ditherRange);
         heightMap[tlCenter.Col, tlCenter.Row] = tlCenterHeight;
 
         ditherRange *= DITHER_DECLINE_RANGE;
-//        Debug.LogError(ditherRange);
         fractalTimes++;
 
         FractalRecursive(bl, bottom, center, left, blCenter, ditherRange, fractalTimes);
@@ -256,7 +256,8 @@ public class FractalTerrain
             {
                 Vector3 vertex = new Vector3(i * length / size, heightMap[i, j], j * width / size);
                 vertexList.Add(vertex);
-//                Debug.LogError(vertex);
+                Vector2 uv = new Vector2(i * 1f / size, j * 1f / size);
+                uvList.Add(uv);
             }
         }
 
@@ -286,6 +287,62 @@ public class FractalTerrain
             }
         }
     }
+
+    private const float COEF_1 = 0.2f;
+    private const float COEF_2 = 0.6f;
+    private const float COEF_3 = 0.8f;
+
+    private void SetTerrainMap()
+    {
+        terrainMap = new Texture2D(TEX_MAP_SIZE, TEX_MAP_SIZE);
+
+        float min = float.MaxValue;
+        float max = float.MinValue;
+        for(int i = 0; i < size; ++i)
+        {
+            for(int j = 0; j < size; ++j)
+            {
+                float height = heightMap[i, j];
+                if(height < min)
+                    min = height;
+                if(height > max)
+                    max = height;
+            }
+        }
+
+        for(int i = 0; i < size; ++i)
+        {
+            for(int j = 0; j < size; ++j)
+            {
+                float ratioX = i * 1f / size;
+                float ratioY = j * 1f / size;
+                int pixelX = (int)(TEX_MAP_SIZE * ratioX);
+                int pixelY = (int)(TEX_MAP_SIZE * ratioY);
+
+                float height = heightMap[i, j];
+                float t = (height - min) / (max - min);
+                Debug.LogError(t);
+                if (t < COEF_1)
+                {
+                    terrainMap.SetPixel(pixelX, pixelY, new Color(1, 0, 0, 0));
+                }
+                else if (t > COEF_1 && t < COEF_2)
+                {
+                    terrainMap.SetPixel(pixelX, pixelY, new Color(0, 1, 0, 0));
+                }
+                else if (t > COEF_2 && t < COEF_3)
+                {
+                    terrainMap.SetPixel(pixelX, pixelY, new Color(0, 0, 1, 0));
+                }
+                else
+                {
+                    terrainMap.SetPixel(pixelX, pixelY, new Color(0, 0, 0, 1));
+                }
+            }
+        }
+        terrainMap.Apply();
+    }
+
     private Vector3 GetNeighborNormalOffset(int col, int row)
     {
         Vector3 offset = Vector3.zero;
