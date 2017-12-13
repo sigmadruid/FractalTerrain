@@ -9,7 +9,7 @@ public class FractalTerrain
     private const float DITHER_DECLINE_RANGE = 0.5f;
     private const int MAX_FRACTAL_TIMES = 10;
 
-    private const int TEX_MAP_SIZE = 1024;
+    private const int TEX_MAP_SIZE = 256;
 
     private float length;
     private float width;
@@ -57,7 +57,7 @@ public class FractalTerrain
         this.length = length;
         this.width = width;
         this.fractalMaxTimes = fractalMaxTimes;
-        UnityEngine.Random.InitState(seed);
+        UnityEngine.Random.seed = seed;
 
         size = (int)Mathf.Pow(2, fractalMaxTimes + 1) + 1;
         Debug.Log("size:" + size);
@@ -294,7 +294,7 @@ public class FractalTerrain
 
     private void SetTerrainMap()
     {
-        terrainMap = new Texture2D(TEX_MAP_SIZE, TEX_MAP_SIZE);
+        terrainMap = new Texture2D(size, size);
 
         float min = float.MaxValue;
         float max = float.MinValue;
@@ -314,14 +314,11 @@ public class FractalTerrain
         {
             for(int j = 0; j < size; ++j)
             {
-                float ratioX = i * 1f / size;
-                float ratioY = j * 1f / size;
-                int pixelX = (int)(TEX_MAP_SIZE * ratioX);
-                int pixelY = (int)(TEX_MAP_SIZE * ratioY);
+                int pixelX = i;
+                int pixelY = j;
 
                 float height = heightMap[i, j];
                 float t = (height - min) / (max - min);
-                Debug.LogError(t);
                 if (t < COEF_1)
                 {
                     terrainMap.SetPixel(pixelX, pixelY, new Color(1, 0, 0, 0));

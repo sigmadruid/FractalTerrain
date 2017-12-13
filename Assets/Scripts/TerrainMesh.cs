@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class TerrainMesh : MonoBehaviour 
 {
-    public GameObject testPrefab;
     private MeshFilter meshFilter;
 
     void Awake()
@@ -15,7 +14,7 @@ public class TerrainMesh : MonoBehaviour
         meshFilter.mesh = mesh;
 
         FractalTerrain terrain = new FractalTerrain();
-        terrain.Init(100, 100, Random.Range(0, 20140413), 3);
+        terrain.Init(100, 100, Random.Range(0, 20140413), 6);
         terrain.Generate();
 
         mesh.vertices = terrain.VertexList.ToArray();
@@ -24,6 +23,9 @@ public class TerrainMesh : MonoBehaviour
         mesh.uv = terrain.UVList.ToArray();
 
         meshFilter.GetComponent<Renderer>().sharedMaterial.SetTexture("_TerrainMap", terrain.TerrainMap);
+
+        MeshCollider mc = meshFilter.gameObject.AddComponent<MeshCollider>();
+        mc.sharedMesh = mesh;
     }
 
 
