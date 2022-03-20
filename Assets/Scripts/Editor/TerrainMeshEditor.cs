@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System;
+using System.IO;
+using UnityEditor;
 using UnityEngine;
 
 namespace DefaultNamespace
@@ -16,6 +18,24 @@ namespace DefaultNamespace
             {
                 target.Regenerate();
             }
+            
+            if (GUILayout.Button("Flatten"))
+            {
+                target.Flatten();
+            }
+            
+            if (GUILayout.Button("Save Mesh"))
+            {
+                SaveMesh(target.Mesh);
+            }
+        }
+
+        private void SaveMesh(Mesh mesh)
+        {
+            string randomName = Guid.NewGuid().ToString() + ".mesh";
+            string path = Path.Combine("Assets/OutputMeshes", randomName);
+            AssetDatabase.CreateAsset(mesh, path);
+            AssetDatabase.Refresh();
         }
     }
 }

@@ -30,7 +30,7 @@ public struct Pos
     {
         return new Pos(p.Col / i, p.Row / i);
     }
-
+    
     public override string ToString()
     {
         return string.Format("({0},{1})", Col, Row);
