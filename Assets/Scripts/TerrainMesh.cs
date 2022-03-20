@@ -19,13 +19,10 @@ public class TerrainMesh : MonoBehaviour
 
         mesh.vertices = terrain.VertexList.ToArray();
         mesh.triangles = terrain.TriangleList.ToArray();
-        mesh.normals = terrain.NormalList.ToArray();
+        mesh.RecalculateNormals();
         mesh.uv = terrain.UVList.ToArray();
 
         meshFilter.GetComponent<Renderer>().sharedMaterial.SetTexture("_TerrainMap", terrain.TerrainMap);
-
-        MeshCollider mc = meshFilter.gameObject.AddComponent<MeshCollider>();
-        mc.sharedMesh = mesh;
     }
 
 

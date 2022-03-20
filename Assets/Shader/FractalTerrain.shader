@@ -1,4 +1,7 @@
-﻿Shader "Custom/FractalTerrain"
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
+Shader "Custom/FractalTerrain"
 {
     Properties
     {
@@ -50,11 +53,11 @@
             v2f vert (a2v v)
             {
                 v2f o;
-                o.pos = mul(UNITY_MATRIX_MVP, v.pos);
+                o.pos = UnityObjectToClipPos(v.pos);
                 o.uvMap = v.uvMap;
                 o.uvTex = v.uvTex * _Tiling.xy;
                 o.worldNormal = normalize(UnityObjectToWorldNormal(v.normal));
-                float3 worldPos = mul(_Object2World, v.pos);
+                float3 worldPos = mul(unity_ObjectToWorld, v.pos);
                 o.worldLight = normalize(UnityWorldSpaceLightDir(worldPos));
                 return o;
             }

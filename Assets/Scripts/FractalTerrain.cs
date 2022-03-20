@@ -29,12 +29,6 @@ public class FractalTerrain
         get { return triangleList; }
     }
 
-    private List<Vector3> normalList = new List<Vector3>();
-    public List<Vector3> NormalList
-    {
-        get { return normalList; }
-    }
-
     private List<Vector2> uvList = new List<Vector2>();
     public List<Vector2> UVList
     {
@@ -80,11 +74,8 @@ public class FractalTerrain
 
         FractalNonRecursive(bl, br, tr, tl, INITIAL_DITHER_RANGE, 0);
 
-//        FractalRecursive(bl, br, tr, tl, center, INITIAL_DITHER_RANGE, 0);
-//        Filter();
         SetTerrainMap();
         Trianglize();
-        SetNormals();
     }
 
     private void FractalNonRecursive(Pos bottomLeft, Pos bottomRight, Pos topRight, Pos topLeft, float ditherRange, int fractalTimes)
@@ -161,93 +152,7 @@ public class FractalTerrain
 
         Debug.Log((DateTime.Now.Ticks - dt.Ticks));
     }
-    private void FractalRecursive(Pos bl, Pos br, Pos tr, Pos tl, Pos center, float ditherRange, int fractalTimes)
-    {
-        if(fractalTimes > fractalMaxTimes)
-        {
-            return;
-        }
-
-        float blHeight = heightMap[bl.Col, bl.Row];
-        float brHeight = heightMap[br.Col, br.Row];
-        float trHeight = heightMap[tr.Col, tr.Row];
-        float tlHeight = heightMap[tl.Col, tl.Row];
-        float centerHeight = heightMap[center.Col, center.Row];
-
-        //Diamond Phase
-        Pos left = (bl + tl) / 2;
-        float leftHeight = (blHeight + tlHeight ) / 2f + RandomOffset(ditherRange);
-        heightMap[left.Col, left.Row] = leftHeight;
-
-        Pos bottom = (bl + br) / 2;
-        float bottomHeight = (blHeight + brHeight) / 2f + RandomOffset(ditherRange);
-        heightMap[bottom.Col, bottom.Row] = bottomHeight;
-
-        Pos right = (tr + br) / 2;
-        float rightHeight = (trHeight + brHeight) / 2f + RandomOffset(ditherRange);
-        heightMap[right.Col, right.Row] = rightHeight;
-
-        Pos top = (tr + tl) / 2;
-        float topHeight = (trHeight + tlHeight) / 2f + RandomOffset(ditherRange);
-        heightMap[top.Col, top.Row] = topHeight;
-
-        //Square Phase
-        Pos blCenter = (bl + center) / 2;
-        float blCenterHeight = (blHeight + centerHeight) / 2f + RandomOffset(ditherRange);
-        heightMap[blCenter.Col, blCenter.Row] = blCenterHeight;
-            
-        Pos brCenter = (br + center) / 2;
-        float brCenterHeight = (brHeight + centerHeight) / 2f + RandomOffset(ditherRange);
-        heightMap[brCenter.Col, brCenter.Row] = brCenterHeight;
-
-        Pos trCenter = (tr + center) / 2;
-        float trCenterHeight = (trHeight + centerHeight) / 2f + RandomOffset(ditherRange);
-        heightMap[trCenter.Col, trCenter.Row] = trCenterHeight;
-
-        Pos tlCenter = (tl + center) / 2;
-        float tlCenterHeight = (tlHeight + centerHeight) / 2f + RandomOffset(ditherRange);
-        heightMap[tlCenter.Col, tlCenter.Row] = tlCenterHeight;
-
-        ditherRange *= DITHER_DECLINE_RANGE;
-        fractalTimes++;
-
-        FractalRecursive(bl, bottom, center, left, blCenter, ditherRange, fractalTimes);
-        FractalRecursive(bottom, br, right, center, brCenter, ditherRange, fractalTimes);
-        FractalRecursive(center, right, tr, top, trCenter, ditherRange, fractalTimes);
-        FractalRecursive(left, center, top, tl, tlCenter, ditherRange, fractalTimes);
-    }
-
-    private const int FILTER_AREA_SIZE = 4;
-    private const float FILTER_RATIO = 0.8f;
-
-    private void Filter()
-    {
-        for(int i = 0; i < size - FILTER_AREA_SIZE; i = i + FILTER_AREA_SIZE)
-        {
-            for(int j = 0; j < size - FILTER_AREA_SIZE; j = j + FILTER_AREA_SIZE)
-            {
-                float heightAverage = 0f;
-                for(int m = i; m < i + FILTER_AREA_SIZE; ++m)
-                {
-                    for(int n = j; n < j + FILTER_AREA_SIZE; ++n)
-                    {
-                        heightAverage += heightMap[m, n];
-                    }
-                }
-                heightAverage /= (FILTER_AREA_SIZE * FILTER_AREA_SIZE);
-                for(int m = i; m < i + FILTER_AREA_SIZE; ++m)
-                {
-                    for(int n = j; n < j + FILTER_AREA_SIZE; ++n)
-                    {
-                        float height = heightMap[m, n];
-                        float newHeight = heightAverage + (height - heightAverage) * FILTER_RATIO;
-                        heightMap[m, n] = newHeight;
-                    }
-                }
-            }
-        }
-    }
-
+    
     private void Trianglize()
     {
         for(int i = 0; i < size; ++i)
@@ -272,19 +177,6 @@ public class FractalTerrain
             triangleList.Add(i + size + 1);
             triangleList.Add(i + size);
             triangleList.Add(i);
-        }
-    }
-
-    private void SetNormals()
-    {
-        for(int i = 0; i < size; ++i)
-        {
-            for(int j = 0; j < size; ++j)
-            {
-                Vector3 normal = Vector3.up;
-                normal += GetNeighborNormalOffset(i, j);
-                normalList.Add(normal.normalized);
-            }
         }
     }
 
@@ -338,33 +230,6 @@ public class FractalTerrain
             }
         }
         terrainMap.Apply();
-    }
-
-    private Vector3 GetNeighborNormalOffset(int col, int row)
-    {
-        Vector3 offset = Vector3.zero;
-        float h = 0;
-        if(col != 0)
-        {
-            h = heightMap[col - 1, row] - heightMap[col, row];
-            offset -= new Vector3(-1, 0, 0) * h;
-        }
-        if(row != 0)
-        {
-            h = heightMap[col, row - 1] - heightMap[col, row];
-            offset -= new Vector3(0, 0, -1) * h;
-        }
-        if(col != size - 1)
-        {
-            h = heightMap[col + 1, row] - heightMap[col, row];
-            offset -= new Vector3(1, 0, 0) * h;
-        }
-        if(row != size - 1)
-        {
-            h = heightMap[col, row + 1] - heightMap[col, row];
-            offset -= new Vector3(0, 0, 1) * h;
-        }
-        return offset;
     }
 
     private float RandomOffset(float ditherRange)
