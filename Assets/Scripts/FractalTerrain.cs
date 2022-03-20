@@ -82,9 +82,9 @@ public class FractalTerrain
 
 //        FractalRecursive(bl, br, tr, tl, center, INITIAL_DITHER_RANGE, 0);
 //        Filter();
+        SetTerrainMap();
         Trianglize();
         SetNormals();
-        SetTerrainMap();
     }
 
     private void FractalNonRecursive(Pos bottomLeft, Pos bottomRight, Pos topRight, Pos topLeft, float ditherRange, int fractalTimes)

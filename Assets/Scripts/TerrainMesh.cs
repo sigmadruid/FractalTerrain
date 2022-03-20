@@ -23,7 +23,7 @@ public class TerrainMesh : MonoBehaviour
         mesh.normals = terrain.NormalList.ToArray();
         mesh.uv = terrain.UVList.ToArray();
 
-        meshFilter.GetComponent<Renderer>().sharedMaterial.SetTexture("_TerrainMap", terrain.TerrainMap);
+//        meshFilter.GetComponent<Renderer>().sharedMaterial.SetTexture("_TerrainMap", terrain.TerrainMap);
     }
 
 
